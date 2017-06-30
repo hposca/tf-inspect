@@ -1,40 +1,41 @@
 package module
 
 import (
+	"fmt"
 	"path"
 	"strings"
 
 	"github.com/awalterschulze/gographviz"
 	"github.com/drrzmr/tf-inspect/loader"
-	"github.com/kr/pretty"
 )
 
 // Do exec module command
 func Do(rootDir string, files loader.Files) int {
 
 	graph := gographviz.NewGraph()
-	//graph := map[string][]string{}
+	graph.SetDir(true)
 
 	files.ForEachModules(func(fn string, name string, module map[string]interface{}) {
 
 		dir := path.Dir(fn)
 		join := path.Join(dir, module["source"].(string))
 
-		moduleName := strings.Replace(dir[len(rootDir):], "-", "_", -1)
-		moduleName = strings.Replace(moduleName, "/", "_", -1)
-		usedModuleName := strings.Replace(join[len(rootDir):], "-", "_", -1)
-		usedModuleName = strings.Replace(usedModuleName, "/", "_", -1)
+		rootDirLen := len(rootDir)
+		if strings.HasSuffix(rootDir, "/") {
+			fmt.Println(path.Dir(rootDir))
+			rootDirLen--
+		}
 
-		//fmt.Printf("module: %s -> %s\n", moduleName, usedModuleName)
+		moduleName := fmt.Sprintf("\"%s\"", dir[rootDirLen+1:])
+		usedModuleName := fmt.Sprintf("\"%s\"", join[rootDirLen+1:])
 
-		/*
-			if _, ok := graph[moduleName]; !ok {
-				graph[moduleName] = []string{}
-			}
-		*/
-		//graph[moduleName] = append(graph[moduleName], usedModuleName)
+		//fmt.Printf("rootDir: %s\ndir: %s\njoin: %s\n%s -> %s\n\n", rootDir, dir, join, moduleName, usedModuleName)
 
-		//graph.AddNode(moduleName, usedModuleName, attrs)
+		//moduleName = strings.Replace(moduleName, "-", "_", -1)
+		//moduleName = strings.Replace(moduleName, "/", "_", -1)
+		//usedModuleName = strings.Replace(usedModuleName, "-", "_", -1)
+		//usedModuleName = strings.Replace(usedModuleName, "/", "_", -1)
+
 		if !graph.IsNode(moduleName) {
 			graph.AddNode("tf", moduleName, nil)
 		}
@@ -47,35 +48,6 @@ func Do(rootDir string, files loader.Files) int {
 
 	})
 
-	//pretty.Println(graph)
-
-	ast, err := graph.WriteAst()
-	if err != nil {
-		panic(err)
-	}
-
-	//s := generateGraph(graph)
-
-	pretty.Println(ast.String())
+	fmt.Print(graph.String())
 	return 0
 }
-
-/*
-func generateGraph(in map[string][]string) string {
-
-	out := gographviz.NewGraph()
-
-	for k := range in {
-		out.AddNode("tf", k, nil)
-	}
-
-	for k, v := range in {
-		for _, e := range v {
-			pretty.Println(k, "->", e)
-			out.AddEdge(k, e, true, nil)
-		}
-	}
-
-	return out.String()
-}
-*/
