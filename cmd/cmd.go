@@ -46,7 +46,7 @@ Options:
 			"aws_security_group_rule",
 		})
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "count not load resources: %v", err)
+			fmt.Fprintf(os.Stderr, "could not load resources: %v", err)
 			return 4
 		}
 
